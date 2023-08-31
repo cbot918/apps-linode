@@ -1,0 +1,66 @@
+version: "3"
+
+networks:
+  nginx:
+
+volumes:
+  minio-data:
+  portainer_data:
+
+
+services:
+
+  auth:
+    image: auth
+    container_name: auth
+    build:
+      context: ./services/auth
+    ports:
+      - "8081:8081"
+    networks:
+      - nginx
+
+  gateway:
+    image: nginx:latest
+    depends_on:
+      - auth
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;  ## Default: 1
+
+        events {
+          worker_connections   1000;
+        }
+
+        http {
+          resolver 127.0.0.11;
+
+          server {
+            listen    3100;
+
+            location = / {
+              return 200 'OK';
+              auth_basic off;
+            }
+
+            location /auth/ {
+              proxy_pass http://auth:8081/;
+            }
+
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+    ports:
+      - "80:3100"
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nginx

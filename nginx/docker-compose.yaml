@@ -1,0 +1,79 @@
+version: "3"
+
+networks:
+  nginx:
+
+volumes:
+  portainer_data:
+
+services:
+  main:
+    image: main
+    container_name: main
+    build:
+      context:
+        .
+    ports:
+      - "8088:8088"
+    networks:
+      - nginx
+
+  portainer1:
+    image: portainer/portainer-ce:latest
+    container_name: portainer1
+    restart: always
+    ports:
+      - "8500:9000"
+      - "8000:8000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+    networks:
+      - nginx
+
+  gateway:
+    image: nginx:latest
+    depends_on:
+      - main
+      - portainer1
+    entrypoint: 
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;  ## Default: 1
+
+        events {
+          worker_connections   1000;
+        }
+
+        http {
+
+          server {
+            listen    3100;
+
+            location = / {
+              return 200 'OK';
+              auth_basic off;
+            }
+
+            location /main/ {
+              proxy_pass http://main:8088/;
+            }
+
+            location /portainer/ {
+              proxy_pass http://portainer1:9000/;
+            }
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+    ports:
+      - "3100:3100"
+
+    networks:
+      - nginx
+    

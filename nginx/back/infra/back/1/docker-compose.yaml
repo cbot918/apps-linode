@@ -1,0 +1,81 @@
+version: "3"
+
+networks:
+  nginx:
+
+volumes:
+  minio-data:
+  portainer_data:
+
+
+  
+
+services:
+
+
+  auth:
+    image: auth
+    container_name: auth
+    build:
+      context: ./service/auth
+    ports:
+      - "8081:8081"
+    networks:
+      - nginx
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=yale918
+      - MINIO_ROOT_PASSWORD=12345
+    volumes:
+      - minio-data:/data
+    networks:
+      - nginx
+
+  gateway:
+    image: nginx:latest
+    depends_on:
+      - minio
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;  ## Default: 1
+
+        events {
+          worker_connections   1000;
+        }
+
+        http {
+          resolver 127.0.0.11;
+
+          server {
+            listen             3100;
+
+            location = / {
+              return 200 'OK';
+              auth_basic off;
+            }
+            location = /minio {
+                proxy_pass http://minio:9000/;
+            }
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nginx
