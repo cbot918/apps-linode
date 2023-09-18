@@ -32,7 +32,7 @@ func download(oldUrl string) (string, error) {
 
 	cmd := cmdy.New()
 	// 技術債
-	cmd0 := fmt.Sprintf("apk add subversion -y")
+	cmd0 := fmt.Sprintf("apk add subversion")
 	cmd1 := fmt.Sprintf("svn checkout %s", newUrl)
 	cmd2 := fmt.Sprintf("tar -cvf %s.tar %s", folderName, folderName)
 	cmd3 := fmt.Sprintf("mv %s.tar files", folderName)
