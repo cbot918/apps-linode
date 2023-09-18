@@ -35,7 +35,7 @@ func download(oldUrl string) (string, error) {
 	cmd1 := fmt.Sprintf("svn checkout %s", newUrl)
 	cmd2 := fmt.Sprintf("tar -cvf %s.tar %s", folderName, folderName)
 	cmd3 := fmt.Sprintf("mv %s.tar files", folderName)
-	// cmd4 := fmt.Sprintf("rm -rf %s", folderName)
+	cmd4 := fmt.Sprintf("rm -rf %s", folderName)
 	fmt.Println("cmd0: " + cmd0)
 	err := cmd.Run([]string{cmd0})
 	if err != nil {
@@ -61,10 +61,10 @@ func download(oldUrl string) (string, error) {
 		log.Fatal(err)
 	}
 
-	// err = cmd.Run([]string{cmd4})
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = cmd.Run([]string{cmd4})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return folderName, nil
 }
