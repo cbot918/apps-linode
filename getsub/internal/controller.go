@@ -31,7 +31,8 @@ func download(oldUrl string) (string, error) {
 	folderName := parts[1]
 
 	cmd := cmdy.New()
-	cmd0 := fmt.Sprintf("sudo apt install subversion -y")
+	// 技術債
+	cmd0 := fmt.Sprintf("apk add subversion -y")
 	cmd1 := fmt.Sprintf("svn checkout %s", newUrl)
 	cmd2 := fmt.Sprintf("tar -cvf %s.tar %s", folderName, folderName)
 	cmd3 := fmt.Sprintf("mv %s.tar files", folderName)
