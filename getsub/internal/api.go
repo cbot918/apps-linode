@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -34,7 +35,12 @@ func (api *API) setupRouter() {
 	// })
 
 	api.App.Get("/", func(c *fiber.Ctx) error {
-		return api.C.GetSub(c)
+		err := api.C.GetSub(c)
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
+		return nil
 	})
 
 	api.App.Get("/ping", func(c *fiber.Ctx) error {
